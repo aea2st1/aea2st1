@@ -1,0 +1,82 @@
+// Testprogramme
+
+
+schedule('{"time":{"start":"00:00","end":"23:59","mode":"minutes","interval":1},"period":{"days":1}}', Tablet_Device_String );   /* alle 10 min */
+//schedule('*/10 * * * * *', Tablet_Device_String);   /* alle 10 min */
+//schedule('*/1 * * * *', Energie_Ertrag_Solarthermie );   /* alle 10 min */
+//schedule('*/10 * * * * *', Energie_Ertrag_Solarthermie );   /* alle 10 sek */
+
+// @ts-ignore
+async function Energie_Ertrag_Solarthermie(){
+
+const Waermekapazitaet_Wasser = 1.16; // spezifische Wärmekapazität Wasser
+const Pufferspeicher = 950; // Vitocell 360M - 950 Litzer
+var Tu_min, Tu_max; // Speicher unten ... zur Vereinfachung ... 7 Uhr Wert und Max 
+// Wert von Tspeicher_unten ... als erste Näherung ausreichend
+var Energie;
+
+console.log('_____Start Test');
+// Strom Wohnung Obergeschoss
+sendTo('influxdb.0', 'query', 'SELECT * FROM "javascript.0.ShellyVerbrauch.SHEM-3#244CAB435D22#1.Emeter0.heute" group by * order by desc limit 1 ', function (result) {
+/*    if (result.error) {
+        console.error(result.error);
+        console.log('____ in error path');
+    } else {
+ */
+        console.log('JSON_String : ' + JSON.stringify(result.result[0]));
+        wert = JSON.stringify(result.result[0]);
+        wert = wert.replace('[',"").replace(']',"");
+        //console.log(wert);
+        Energie_heute_OG = JSON.parse(wert);
+        console.log('Energie_heute_OG ___ : ' + Energie_heute_OG.value);       
+//sendTo('telegram.0', 'Solar Stunden: ' + obj.value); 
+//}});
+});
+/*
+console.log("___ Energie_Ertrag_Solarthermie");
+sendTo('influxdb.0', 'query', 'select max("value") from "viessmann.0.get.TempSpu" where time > now() - 1d  ', 
+function (result) {
+        Tu_max = result.result[0][0].max;
+        setState('0_userdata.0.Zwischenwerte.Tspu_max', Tu_max);
+        console.info("____ Tu_max: " + Tu_max);
+        sleep(1000);
+  });
+
+sendTo('influxdb.0', 'query', 'select min("value") from "viessmann.0.get.TempSpu" where time > now() - 1d  ', 
+function (result) {
+        Tu_min = result.result[0][0].min;
+        setState('0_userdata.0.Zwischenwerte.Tspu_min', Tu_min);
+        console.log("____ Tu_min: " + Tu_min);
+        Energie =  (Tu_max - Tu_min) * Waermekapazitaet_Wasser * Pufferspeicher / 1000;
+        setState('0_userdata.0.Zwischenwerte.Ertrag_Solar_heute', Energie);
+        console.log("____ Leistung Solar heute: "  + Energie + " kWh");
+  });
+*/
+
+};
+
+
+function Tablet_Device_String(){
+
+var varJSON = 'alias.0.Haustechnik.Akku_Status.UG_Heizungskeller_Tablet';
+var rawJSON = getState(varJSON).val;
+// var Anzahl = rawJSON.length;
+//console.log("___Anzahl Elemente : " + Anzahl);  // Anzahl der Tabelleneinträge bestimmen
+var BatteryLevel = rawJSON.batteryLevel;
+
+setState('alias.0.Haustechnik.Akku_Status.Tablet_Heizungskeller_Ladung', BatteryLevel);
+
+console.log("___ ping - batteryLevel : " + BatteryLevel);
+
+if (BatteryLevel > 90) {
+    console.log("___ BatteryLevel > 90");
+    setState('alias.0.Haustechnik.Akku_Status.Tablet_Heizungskeller_Spannung', false);
+    }
+if (BatteryLevel < 15) {
+    console.log("___ BatteryLevel < 15");
+    setState('alias.0.Haustechnik.Akku_Status.Tablet_Heizungskeller_Spannung', true);
+    }
+
+
+}
+

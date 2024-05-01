@@ -1,0 +1,7 @@
+{
+  "ioBrokerUrl": "http://10.0.0.50",
+  "socketIoPort": 8081,
+  "scriptRoot": "/daten",
+  "adminVersion": "admin6",
+  "allowSelfSignedCertificate": false
+}
